@@ -9,4 +9,5 @@ int main() {
 	char ret[76];
 
 	gets(ret);
+	return(0)
 }
