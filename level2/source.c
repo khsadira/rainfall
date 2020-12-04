@@ -4,18 +4,18 @@
 
 void p() {
   char tab[76];
-  int EAX;
+  int eip;
 
   fflush(stdout);
   gets(tab);
-  EAX = (int)(&tab + 80);
-  if ((EAX & 0xb0000000) == 0xb0000000)
+  eip = (int)(&tab + 80);
+  if ((eip & 0xb0000000) == 0xb0000000)
   {
-    printf("(%p)\n", (void *)EAX);
+    printf("(%p)\n", (void *)eip);
     exit(1);
   }
-  puts(tab);
   strdup(tab);
+  puts(tab);
   return ;
 }
 
