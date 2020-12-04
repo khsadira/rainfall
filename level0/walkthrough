@@ -1,0 +1,21 @@
+binaire level0
+on execute:
+    ~$ ./level0
+    segfault
+
+    ~$ ./level0 1
+    No !
+
+On l'ouvre avec gdb
+
+On voit un atoi, puis un cmp:
+    0x08048ed9 <+25>:    cmp    $0x1a7,%eax
+
+On en conclut donc que on doit envoyer 0x1a7 en entré, 423
+
+    ~$ ./level0 423
+    $ whoami
+    level1
+    ~$ cat /home/user/level1/.pass
+
+On a bien le flag.
