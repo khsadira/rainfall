@@ -6,7 +6,7 @@ void run(void) {
 }
 
 int main() {
-	char ret[76];
+	char ret[74];
 
 	gets(ret);
 	return(0)
