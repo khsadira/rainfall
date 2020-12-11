@@ -8,7 +8,7 @@ nope
 segfault
 
 objdump -R level6:
-    08049814 R_386_JUMP_SLOT   puts
+    0804980c R_386_JUMP_SLOT   strcpy
 
 On en conclut qu'on peut executer une bufferoverflow
 
