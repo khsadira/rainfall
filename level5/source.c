@@ -1,21 +1,21 @@
 #include <stdio.h>
 
-m = 0
+m = 0;
 
 void o() {
   system("/bin/sh");
-  exit(1)
+  exit(1);
 }
 
 void n() {
   char buffer[512];
 
   fgets(buffer, 512, stdin);
-  printf(buffer)
-  exit(1)
+  printf(buffer);
+  exit(1);
 }
 
 int main() {
-  n ()
-  return ;
+  n();
+  return(0) ;
 }
