@@ -1,0 +1,12 @@
+Dans ce binaire, il y a quatre instructions possibles, visible dans strings.
+auth, reset, service et login.
+
+En recodant avec gdb, nous avons constaté qu'il fallait que les deux adresses
+soient à 30 de différence.
+
+Donc, en faisant :
+auth test
+service test
+service test
+login
+Nous arrivons à déclencher le "system("/bin/sh")".
