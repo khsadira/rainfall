@@ -10,16 +10,15 @@ void    p(char *entry, char *to_print)
 
 void    pp(char *a)
 {
-    char    *input1;
-    char    *input2;
+    char    input1[20];
+    char    input2[28];
 
     p(input1, " - ");
     p(input2, " - ");
-    strcpy(res, input1);
-    ?????
-    res = res + " "
-    ?????
-    strcat(res, input2);
+    strcpy(a, input1);
+    a[strlen(a)] = " ";
+    strcat(a, input2);
+    return (a);
 }
 
 int     main(void)
