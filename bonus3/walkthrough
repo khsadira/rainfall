@@ -1,0 +1,15 @@
+Apres ecriture du code en C.
+
+On voit que on peut executer un shell, si la ligne suivante est vrai.
+    if (strcmp(buf, av[1]) == 0)
+
+Juste avant cette comparaison; on a:
+	buf[atoi(av[1])] = 0;
+
+Si av[1] == ""
+
+buf[0] == "\0"
+av[1] == "\0"
+
+On peut donc utiliser "" en arg
+./bonus3 ""
